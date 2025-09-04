@@ -1,0 +1,76 @@
+- name: Verify Prometheus container is running
+  ansible.builtin.command: docker ps -f name=prometheus --format "{% raw %}{{.Names}}{% endraw %}"
+  register: prometheus_ps
+  failed_when: "'prometheus' not in prometheus_ps.stdout"
+  changed_when: false
+
+- name: Get Prometheus container logs for debugging
+  ansible.builtin.command: docker logs prometheus
+  register: prometheus_logs
+  changed_when: false
+  ignore_errors: yes # Allow playbook to continue even if logs command fails
+
+- name: Display Prometheus logs
+  ansible.builtin.debug:
+    msg: "{{ prometheus_logs.stdout_lines }}"
+  when: prometheus_logs.stdout is defined and prometheus_logs.stdout | length > 0
+
+- name: Verify Grafana container is running
+  ansible.builtin.command: docker ps -f name=grafana --format "{% raw %}{{.Names}}{% endraw %}"
+  register: grafana_ps
+  failed_when: "'grafana' not in grafana_ps.stdout"
+  changed_when: false
+
+- name: Wait for Node Exporter web interface to be available
+  ansible.builtin.wait_for:
+    port: 9100
+    host: 127.0.0.1 # Connect to localhost on the remote host
+    delay: 5 # Wait 5 seconds before first check
+    timeout: 30 # Fail after 30 seconds
+    state: started # Wait for the port to be open
+
+- name: Debug: Get Node Exporter service status
+  ansible.builtin.command: systemctl status node_exporter
+  register: node_exporter_status
+  changed_when: false
+  ignore_errors: yes
+
+- name: Debug: Display Node Exporter service status
+  ansible.builtin.debug:
+    msg: "{{ node_exporter_status.stdout_lines }}"
+
+- name: Debug: Get Node Exporter logs
+  ansible.builtin.command: journalctl -u node_exporter --no-pager
+  register: node_exporter_logs
+  changed_when: false
+  ignore_errors: yes
+
+- name: Debug: Display Node Exporter logs
+  ansible.builtin.debug:
+    msg: "{{ node_exporter_logs.stdout_lines }}"
+
+- name: Debug: Check listening ports for 9100
+  ansible.builtin.command: sudo netstat -tulnp | grep 9100
+  register: netstat_output
+  changed_when: false
+  ignore_errors: yes
+
+- name: Debug: Display listening ports for 9100
+  ansible.builtin.debug:
+    msg: "{{ netstat_output.stdout_lines }}"
+
+- name: Check Prometheus web UI accessibility
+  ansible.builtin.uri:
+    url: http://localhost:9090
+    status_code: 200
+  register: prometheus_web_check
+  failed_when: prometheus_web_check.status != 200
+  changed_when: false
+
+- name: Check Grafana web UI accessibility
+  ansible.builtin.uri:
+    url: http://localhost:3000
+    status_code: 200
+  register: grafana_web_check
+  failed_when: grafana_web_check.status != 200
+  changed_when: false

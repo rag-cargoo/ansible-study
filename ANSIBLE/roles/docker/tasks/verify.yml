@@ -1,0 +1,32 @@
+    - name: Check Docker version
+      ansible.builtin.command:
+        cmd: "docker --version"
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker version
+      ansible.builtin.debug:
+        msg: "Docker Version: {{ docker_version.stdout }}"
+
+    - name: Check Docker Compose version
+      ansible.builtin.command:
+        cmd: "docker-compose --version"
+      register: docker_compose_version
+      changed_when: false
+
+    - name: Display Docker Compose version
+      ansible.builtin.debug:
+        msg: "Docker Compose Version: {{ docker_compose_version.stdout }}"
+
+    - name: Check Docker service status
+      ansible.builtin.command:
+        cmd: "systemctl is-active docker"
+      register: service_status
+      changed_when: false
+
+    - name: Assert that Docker service is active
+      ansible.builtin.assert:
+        that:
+          - "'active' in service_status.stdout"
+        fail_msg: "Docker service is not active."
+        success_msg: "Docker service is active."

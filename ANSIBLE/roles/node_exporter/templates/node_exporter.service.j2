@@ -1,0 +1,17 @@
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter \
+  --web.listen-address=":9100" \
+  --collector.filesystem.mount-points-exclude="^/(sys|proc|dev|host|etc)($|/)" \
+  --collector.diskstats.device-exclude="^(ram|loop|fd|(h|s)d[a-zA-Z]|nvme\\d+n\\d+p)\\d+$"
+
+[Install]
+WantedBy=multi-user.target
+

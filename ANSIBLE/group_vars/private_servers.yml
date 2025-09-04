@@ -1,0 +1,1 @@
+ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand='ssh -i ~/.aws/key/test_key.pem -W %h:%p ubuntu@{{ hostvars['bastion-host']['ansible_host'] }}'"
