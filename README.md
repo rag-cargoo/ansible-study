@@ -59,7 +59,14 @@ terraform apply
 
 ## 6. Ansible을 이용한 소프트웨어 배포
 
-`terraform apply` 후, `IaC/ANSIBLE` 디렉터리로 이동하여 다음 단계를 진행합니다.
+모든 소프트웨어 배포는 `IaC/ANSIBLE` 디렉터리로 이동하여 다음 단일 명령으로 수행할 수 있습니다.
+
+```bash
+cd IaC/ANSIBLE/
+./deploy.sh
+```
+
+개별 단계별로 실행하려면 아래 지침을 따르세요.
 
 ### 6.1. Ansible 인벤토리 업데이트
 
@@ -112,8 +119,9 @@ ansible-playbook playbooks/prepare-load-test.yml
 이제 모든 준비가 끝났습니다. **Grafana 대시보드를 열어둔 상태**에서, **새로운 터미널**을 열어 배스천 호스트에 접속한 후 아래 명령어를 실행하여 부하 테스트를 시작합니다.
 
 1.  **배스천 호스트 접속:**
+    *   `scripts/connect_bastion.sh` 스크립트를 사용하여 접속합니다.
     ```bash
-    ssh -i ~/.aws/key/test_key.pem ubuntu@<BASTION_PUBLIC_IP>
+    ./scripts/connect_bastion.sh <BASTION_PUBLIC_IP>
     ```
 
 2.  **부하 테스트 시작:**

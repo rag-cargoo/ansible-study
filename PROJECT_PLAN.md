@@ -6,7 +6,16 @@ Terraform을 사용하여 고가용성 AWS 인프라를 코드로 구축하고, 
 
 ---
 
-## 2. 현재 아키텍처 (Terraform으로 정의됨)
+## 2.1. 프로젝트 디렉터리 구조
+
+- **`IaC/`**: 모든 인프라 자동화(IaC) 관련 코드를 포함합니다.
+  - `TERRAFORM/`: AWS 인프라 정의
+  - `ANSIBLE/`: 서버 설정 및 소프트웨어 배포
+- **`APP/`**: 배포될 애플리케이션 소스 코드 (예: `my-python-app/`)
+- **`LOAD_TESTING/`**: 부하 테스트 시나리오 스크립트 (예: `k6-scripts/`)
+- **`scripts/`**: SSH 터널링과 같은 보조 스크립트
+
+## 2.2. 현재 아키텍처 (Terraform으로 정의됨)
 
 - **VPC**: 1개
 - **가용 영역 (AZ)**: 2개 (ap-northeast-2a, ap-northeast-2c)
@@ -32,16 +41,18 @@ Terraform을 사용하여 고가용성 AWS 인프라를 코드로 구축하고, 
 
 ## 4. Phase 2: 샘플 앱 배포 및 부하 테스트 (완료)
 
-1.  **프로젝트 구조 개선**: 소스 코드 관리를 위해 루트에 `APP` 및 `LOAD_TESTING` 디렉터리를 추가하여 역할을 명확히 분리함.
+1.  **프로젝트 구조 개선**: 소스 코드 관리를 위해 루트에 `APP` 및 `LOAD_TESTING` 디렉터리를 추가하고, 그 안에 `my-python-app/`, `k6-scripts/`와 같이 종류별로 하위 디렉터리를 구성하여 모듈화를 강화함.
 2.  **샘플 앱 Dockerize**: CPU 부하를 유발하는 Python Flask 앱(`app.py`)을 작성하고, `Dockerfile` 및 `requirements.txt`를 통해 컨테이너 이미지로 빌드할 수 있도록 구성함.
 3.  **Docker Compose 앱 정의**: `docker-compose.app.yml` 파일을 작성하여 Dockerize된 앱의 실행 방식을 정의함.
 4.  **Ansible 배포 플레이북 작성**: `deploy-app-docker.yml`을 작성하여 `app_servers` 그룹 전체에 Docker 기반 앱을 배포하도록 구현함. (사용자의 제안에 따라 기존 계획을 더 나은 방식으로 수정)
 5.  **부하 테스트 도구 설치**: `k6` 설치 플레이북(`install-k6.yml`)을 작성하고, 여러 번의 GPG 키 오류를 해결하며 최종적으로 배스천 호스트에 `k6` 설치를 완료함.
 6.  **부하 테스트 준비 및 실행**: `prepare-load-test.yml`을 통해 테스트 스크립트를 배스천 호스트에 복사하고, 실제 부하 테스트를 실행하여 Grafana 대시보드에서 `app_servers`의 CPU 사용량 변화를 관찰함.
+7.  **Ansible 코드 모듈화**: 배포 과정을 일반화하기 위해 `deploy_compose_stack`이라는 재사용 가능한 역할을 생성함. 여러 번의 디버깅을 통해 `docker_container` 모듈을 사용하여 기존 컨테이너를 안정적으로 제거하는 로직을 구현하며 리팩토링을 완료함.
+8.  **전체 배포 오케스트레이션**: `deploy-all.yml` 플레이북을 생성하여 모든 개별 배포 플레이북을 단일 명령으로 실행할 수 있도록 통합함. (실행 스크립트: `deploy.sh`)
 
 ---
 
-7.  **Ansible 코드 모듈화**: 배포 과정을 일반화하기 위해 `deploy_compose_stack`이라는 재사용 가능한 역할을 생성함. 여러 번의 디버깅을 통해 `docker_container` 모듈을 사용하여 기존 컨테이너를 안정적으로 제거하는 로직을 구현하며 리팩토링을 완료함.
+## 5. 향후 개선 방안
 
 ### 5.1. Grafana 접속 방식 개선
 
