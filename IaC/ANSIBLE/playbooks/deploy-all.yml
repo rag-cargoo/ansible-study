@@ -1,0 +1,4 @@
+- import_playbook: install-k6.yml
+- import_playbook: deploy-monitoring.yml
+- import_playbook: deploy-app-docker.yml
+- import_playbook: prepare-load-test.yml

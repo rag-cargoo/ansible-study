@@ -1,0 +1,11 @@
+- name: Deploy App via Docker Compose using a reusable role
+  hosts: app_servers
+  become: yes
+  roles:
+    - role: docker # Ensure docker is installed first
+    - role: deploy_compose_stack
+      vars:
+        stack_name: "my-app"
+        source_path: "../../../APP/my-python-app"
+        dest_path: "/srv/my-app"
+        compose_file_name: "docker-compose.app.yml"

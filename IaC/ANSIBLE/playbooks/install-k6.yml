@@ -1,0 +1,41 @@
+- name: Install k6 Load Tester on Bastion
+  hosts: bastion-host
+  become: yes
+
+  tasks:
+    - name: Clean up previous failed attempts
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/apt/sources.list.d/k6.list
+        - /usr/share/keyrings/k6-archive-keyring.gpg
+
+    - name: Install prerequisites
+      apt:
+        name: ["ca-certificates", "gnupg"]
+        state: present
+        update_cache: yes
+
+    - name: Download the k6 GPG key
+      get_url:
+        url: "https://dl.k6.io/key.gpg"
+        dest: /tmp/k6-key.gpg
+        mode: '0644'
+
+    - name: De-armor the GPG key
+      shell: "cat /tmp/k6-key.gpg | gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg"
+      args:
+        creates: /usr/share/keyrings/k6-archive-keyring.gpg
+
+    - name: Add k6 repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main"
+        state: present
+        filename: k6
+
+    - name: Install k6
+      apt:
+        name: k6
+        state: present
+        update_cache: yes

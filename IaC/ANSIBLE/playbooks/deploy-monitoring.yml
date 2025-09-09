@@ -1,0 +1,12 @@
+- name: Play 1 - Deploy Node Exporter to all targets
+  hosts: node_exporter_targets
+  become: yes
+  roles:
+    - role: node_exporter
+
+- name: Play 2 - Deploy Monitoring Stack (Prometheus & Grafana)
+  hosts: monitoring-host
+  become: yes
+  roles:
+    - role: docker
+    - role: monitoring

@@ -1,0 +1,19 @@
+# defaults file for deploy_compose_stack
+
+# The name of the stack, for logging or naming purposes
+stack_name: "default-stack"
+
+# The local source directory containing static files (non-templates)
+source_path: ""
+
+# The absolute destination path on the remote server
+dest_path: "/srv/{{ stack_name }}"
+
+# The filename of the docker-compose file
+compose_file_name: "docker-compose.yml"
+
+# A list of template files to render into the dest_path
+compose_templates: []
+
+# A list of container names to forcefully stop and remove before compose up
+container_names: []

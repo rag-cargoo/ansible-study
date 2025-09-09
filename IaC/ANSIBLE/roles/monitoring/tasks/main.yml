@@ -1,0 +1,30 @@
+- name: Deploy monitoring stack using the generic role
+  ansible.builtin.include_role:
+    name: deploy_compose_stack
+  vars:
+    stack_name: "monitoring"
+    source_path: "../roles/monitoring/files"
+    dest_path: "/srv/monitoring"
+    compose_file_name: "docker-compose.yml"
+    compose_templates:
+      - { 
+          src: "../roles/monitoring/templates/prometheus.yml.j2", 
+          dest: "prometheus.yml" 
+        }
+    container_names: ["prometheus", "grafana"]
+
+- name: Wait for Prometheus web interface to be available
+  ansible.builtin.wait_for:
+    port: 9090
+    host: 127.0.0.1
+    delay: 5
+    timeout: 60
+    state: started
+
+- name: Wait for Grafana web interface to be available
+  ansible.builtin.wait_for:
+    port: 3000
+    host: 127.0.0.1
+    delay: 5
+    timeout: 60
+    state: started

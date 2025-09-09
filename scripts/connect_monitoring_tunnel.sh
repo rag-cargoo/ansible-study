@@ -8,7 +8,7 @@ BASTION_PUBLIC_IP=$1
 MONITORING_PRIVATE_IP="10.0.101.11"
 GRAFANA_PORT="3000"
 LOCAL_PORT="3000"
-SSH_KEY_PATH="~/.aws/key/test_key.pem"
+SSH_KEY_PATH="$HOME/.aws/key/test_key.pem"
 SSH_USER="ubuntu"
 
 if [ -z "$BASTION_PUBLIC_IP" ]; then

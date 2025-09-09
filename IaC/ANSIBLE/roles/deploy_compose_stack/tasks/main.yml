@@ -1,0 +1,46 @@
+# tasks file for deploy_compose_stack
+- name: "[Deploy | {{ stack_name }}] Ensure docker-compose is installed"
+  become: yes
+  apt:
+    name: docker-compose
+    state: present
+
+- name: "[Deploy | {{ stack_name }}] Create destination directory"
+  become: yes
+  file:
+    path: "{{ dest_path }}"
+    state: directory
+    mode: '0755'
+
+- name: "[Deploy | {{ stack_name }}] Copy static files"
+  become: yes
+  copy:
+    src: "{{ source_path }}/"
+    dest: "{{ dest_path }}/"
+  when: source_path != ""
+
+- name: "[Deploy | {{ stack_name }}] Render template files"
+  become: yes
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ dest_path }}/{{ item.dest }}"
+  loop: "{{ compose_templates }}"
+  when: compose_templates is defined and compose_templates | length > 0
+
+- name: "[Deploy | {{ stack_name }}] Forcefully stop and remove conflicting containers"
+  become: yes
+  community.docker.docker_container:
+    name: "{{ item }}"
+    state: absent
+    force_kill: yes
+  loop: "{{ container_names }}"
+  when: container_names is defined and container_names | length > 0
+
+- name: "[Deploy | {{ stack_name }}] Run and manage docker-compose stack with v2"
+  become: yes
+  community.docker.docker_compose_v2:
+    project_src: "{{ dest_path }}"
+    files:
+      - "{{ compose_file_name }}"
+    state: present
+    build: always

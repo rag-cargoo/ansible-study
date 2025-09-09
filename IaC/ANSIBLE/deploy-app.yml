@@ -1,0 +1,60 @@
+- name: Deploy and Run CPU-intensive App
+  hosts: app-server-a
+  become: yes
+  vars:
+    app_dir: /srv/my-app
+    venv_dir: "{{ app_dir }}/venv"
+
+  tasks:
+    - name: Install Python dependencies
+      apt:
+        name: ["python3-pip", "python3-venv"]
+        state: present
+        update_cache: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Create Python virtual environment
+      command:
+        cmd: "python3 -m venv {{ venv_dir }}"
+        creates: "{{ venv_dir }}/bin/pip"
+
+    - name: Install Flask and Gunicorn in virtual environment
+      pip:
+        name: ["flask", "gunicorn"]
+        virtualenv: "{{ venv_dir }}"
+
+    - name: Copy application file
+      copy:
+        src: app.py
+        dest: "{{ app_dir }}/app.py"
+
+    - name: Create Gunicorn systemd service file
+      copy:
+        dest: /etc/systemd/system/my-app.service
+        content: |
+          [Unit]
+          Description=Gunicorn instance to serve my-app
+          After=network.target
+
+          [Service]
+          User=www-data
+          Group=www-data
+          WorkingDirectory={{ app_dir }}
+          ExecStart={{ venv_dir }}/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd and start the service
+      systemd:
+        name: my-app
+        daemon_reload: yes
+        state: restarted
+        enabled: yes
